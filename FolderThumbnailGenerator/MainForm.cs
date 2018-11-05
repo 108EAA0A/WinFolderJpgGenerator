@@ -63,7 +63,6 @@ namespace FolderThumbnailGenerator
 
             if (sourceFile != null)
             {
-                //string thumbnailPath = $@"{path}\folder{Path.GetExtension(sourceFile)}";
                 string thumbnailPath = $@"{path}\folder.jpg";
 
                 RemoveAttributes(path, FileAttributes.ReadOnly); // ディレクトリの読み取り専用解除
