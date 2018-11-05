@@ -14,11 +14,6 @@ namespace FolderThumbnailGenerator
 {
     public partial class MainForm : Form
     {
-        public MainForm()
-        {
-            InitializeComponent();
-        }
-
         // folder.*としてコピーすることを許可する拡張子一覧
         readonly string[] permissionImageExtList =
         {
@@ -28,6 +23,11 @@ namespace FolderThumbnailGenerator
             "gif",
             "bmp",
         };
+
+        public MainForm()
+        {
+            InitializeComponent();
+        }
 
         bool IsImageFile(string path)
         {
@@ -102,7 +102,18 @@ namespace FolderThumbnailGenerator
             }
         }
 
-        private void button_DirectorySelect_Click(object sender, EventArgs e)
+        bool p_working;
+        bool Working
+        {
+            get { return p_working; }
+            set
+            {
+                p_working = value;
+                this.button_Execution.Enabled = !value;
+            }
+        }
+
+        void button_DirectorySelect_Click(object sender, EventArgs e)
         {
             using (var cofd = new CommonOpenFileDialog())
             {
@@ -116,7 +127,7 @@ namespace FolderThumbnailGenerator
             }
         }
 
-        private void button_Execution_Click(object sender, EventArgs e)
+        void button_Execution_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(this.textBox_DirectoryName.Text))
             {
@@ -124,7 +135,25 @@ namespace FolderThumbnailGenerator
                 return;
             }
 
+            backgroundWorker.RunWorkerAsync();
+            Working = true;
+        }
+
+        void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // TODO:プログレスバーのために、総作業量と進捗率を取得する
             GenerateThumbnail(this.textBox_DirectoryName.Text);
+            //backgroundWorker.ReportProgress(percent);
+        }
+
+        void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar.Value = e.ProgressPercentage;
+        }
+
+        void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Working = false;
             MessageBox.Show(@"終了しました");
         }
     }

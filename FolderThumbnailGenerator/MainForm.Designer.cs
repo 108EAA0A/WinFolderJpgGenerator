@@ -36,6 +36,7 @@
             this.checkBox_IsHiddenFile = new System.Windows.Forms.CheckBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.button_Execution = new System.Windows.Forms.Button();
+            this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // button_DirectorySelect
@@ -117,6 +118,13 @@
             this.button_Execution.UseVisualStyleBackColor = true;
             this.button_Execution.Click += new System.EventHandler(this.button_Execution_Click);
             // 
+            // backgroundWorker
+            // 
+            this.backgroundWorker.WorkerReportsProgress = true;
+            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
+            this.backgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
+            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -147,6 +155,7 @@
         private System.Windows.Forms.CheckBox checkBox_IsHiddenFile;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Button button_Execution;
+        private System.ComponentModel.BackgroundWorker backgroundWorker;
     }
 }
 
