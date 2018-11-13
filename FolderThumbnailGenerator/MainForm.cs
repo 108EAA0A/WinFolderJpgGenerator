@@ -31,30 +31,45 @@ namespace FolderThumbnailGenerator
 
         bool IsImageFile(string path)
         {
-            string ext = Path.GetExtension(path);
-            if (string.IsNullOrWhiteSpace(ext)) return false; // 拡張子のないファイルは除外
-            ext = ext.Remove(0, 1); // 先頭のピリオドを削除
+            string fileExt = Path.GetExtension(path);
+            if (string.IsNullOrWhiteSpace(fileExt)) return false; // 拡張子のないファイルは除外
+            fileExt = fileExt.Remove(0, 1); // 先頭のピリオドを削除
 
-            foreach (string testExt in permissionImageExtList)
-            {
-                if (ext == testExt) return true;
-            }
-
-            return false; // permissionImageExtListに存在しない拡張子だった
+            return permissionImageExtList.Any(testExt => testExt == fileExt); // permissionImageExtListに存在するか
         }
 
         void AddAttributes(string path, FileAttributes attr)
         {
             FileAttributes fa = File.GetAttributes(path);
-            if ((fa & attr) == attr) return;
+            if (fa.HasFlag(attr)) return;
             File.SetAttributes(path, fa | attr);
         }
 
         void RemoveAttributes(string path, FileAttributes attr)
         {
             var fa = File.GetAttributes(path);
-            if ((fa & attr) != attr) return;
+            if (!fa.HasFlag(attr)) return;
             File.SetAttributes(path, fa & ~attr);
+        }
+
+        int GetTotalAmountOfWork(string path, bool isRecurse)
+        {
+            int sumWorkNum = 0;
+            string sourceFile = Directory.GetFiles(path)?.FirstOrDefault(file => IsImageFile(file));
+            if (sourceFile != null)
+            {
+                ++sumWorkNum;
+            }
+
+            if (isRecurse)
+            {
+                foreach (string subDirPath in Directory.GetDirectories(path))
+                {
+                    sumWorkNum += GetTotalAmountOfWork(subDirPath, isRecurse);
+                }
+            }
+
+            return sumWorkNum;
         }
 
         void GenerateThumbnail(string path)
@@ -76,21 +91,19 @@ namespace FolderThumbnailGenerator
                 {
                     File.Copy(sourceFile, thumbnailPath, this.checkBox_IsOverwrite.Checked); // 上書き許可判定
                 }
-                catch (UnauthorizedAccessException e)
+                //catch (UnauthorizedAccessException e)
+                //{
+                //    MessageBox.Show(e.Message, "UnauthorizedAccessException", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //}
+                catch (Exception e)
                 {
-                    MessageBox.Show(e.Message, "UnauthorizedAccessException", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //とりあえず黙らせる
                 }
 
-                if (this.checkBox_IsHiddenFile.Checked) // 隠しファイル化判定
-                {
-                    AddAttributes(thumbnailPath, FileAttributes.Hidden);
-                }
-                else
-                {
-                    // CopyでUnauthorizedAccessExceptionが出る対策になるらしい
-                    // ファイルの属性がないのはよくないため？
-                    AddAttributes(thumbnailPath, FileAttributes.Normal);
-                }
+                // 隠しファイル化判定
+                AddAttributes(thumbnailPath, this.checkBox_IsHiddenFile.Checked ? FileAttributes.Hidden : FileAttributes.Normal);
+                // CopyでUnauthorizedAccessExceptionが出る対策になるらしい
+                // ファイルの属性がないのはよくないため？
             }
 
             // 再帰処理許可判定
@@ -105,7 +118,7 @@ namespace FolderThumbnailGenerator
         bool p_working;
         bool Working
         {
-            get { return p_working; }
+            //get { return p_working; }
             set
             {
                 p_working = value;
@@ -135,13 +148,17 @@ namespace FolderThumbnailGenerator
                 return;
             }
 
-            backgroundWorker.RunWorkerAsync();
             Working = true;
+            backgroundWorker.RunWorkerAsync();
         }
 
         void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             // TODO:プログレスバーのために、総作業量と進捗率を取得する
+
+            int totalAmountOfWork = GetTotalAmountOfWork(this.textBox_DirectoryName.Text, this.checkBox_IsRecursion.Checked);
+
+
             GenerateThumbnail(this.textBox_DirectoryName.Text);
             //backgroundWorker.ReportProgress(percent);
         }
@@ -155,6 +172,27 @@ namespace FolderThumbnailGenerator
         {
             Working = false;
             MessageBox.Show(@"終了しました");
+        }
+
+        private void MainForm_DragEnter(object sender, DragEventArgs e)
+        {
+            // ドラッグドロップ時にカーソルの形状を変更
+            e.Effect = DragDropEffects.All;
+        }
+
+        private void MainForm_DragDrop(object sender, DragEventArgs e)
+        {
+            // ファイルが渡されていなければ何もしない
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+
+            // 渡されたファイルに対して処理を行う
+            string dropPath = ((string[]) e.Data.GetData(DataFormats.FileDrop))[0];
+
+            // ディレクトリならテキストボックスに代入
+            if (File.GetAttributes(dropPath).HasFlag(FileAttributes.Directory))
+            {
+                textBox_DirectoryName.Text = dropPath;
+            }
         }
     }
 }
