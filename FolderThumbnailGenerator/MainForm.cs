@@ -32,6 +32,7 @@ namespace FolderThumbnailGenerator
             "png",
             "gif",
             "bmp",
+            "tiff",
         };
 
         public MainForm()
@@ -104,9 +105,9 @@ namespace FolderThumbnailGenerator
 
         void GenerateThumbnail(string path)
         {
-            string sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => IsImageFile(file));
             var thumbnailPath = $@"{path}\folder.jpg";
             var isThumbnailExist = File.Exists(thumbnailPath);
+            string sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
 
 
             // 拡張子一覧に合うファイルが存在しない、または、ファイルが既に存在し、上書きが許可されていない場合は作業しない
@@ -119,7 +120,10 @@ namespace FolderThumbnailGenerator
                 if (isThumbnailExist && this.checkBox_IsOverwrite.Checked)
                 {
                     // 既存ファイルの読み取り専用解除
-                    RemoveAttributes(thumbnailPath, FileAttributes.ReadOnly);
+                    //RemoveAttributes(thumbnailPath, FileAttributes.ReadOnly);
+
+                    // 既存ファイルを消去
+                    File.Delete(thumbnailPath);
                 }
 
                 // 圧縮判定
@@ -167,7 +171,8 @@ namespace FolderThumbnailGenerator
                 }
 
                 // 作業進捗率用
-                this.backgroundWorker.ReportProgress((int)(((double) totalWorkNum / ++completeWorkNum) * 100));
+                var percent = ((double)++completeWorkNum / totalWorkNum) * 100;
+                this.backgroundWorker.ReportProgress((int)percent);
             }
 
             // 再帰処理許可判定
@@ -253,13 +258,13 @@ namespace FolderThumbnailGenerator
             MessageBox.Show(@"終了しました");
         }
 
-        private void MainForm_DragEnter(object sender, DragEventArgs e)
+        void MainForm_DragEnter(object sender, DragEventArgs e)
         {
             // ドラッグドロップ時にカーソルの形状を変更
             e.Effect = DragDropEffects.All;
         }
 
-        private void MainForm_DragDrop(object sender, DragEventArgs e)
+        void MainForm_DragDrop(object sender, DragEventArgs e)
         {
             // ファイルが渡されていなければ何もしない
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
