@@ -107,8 +107,11 @@ namespace FolderThumbnailGenerator
         int GetTotalAmountOfWork(string path)
         {
             int sumWorkNum = 0;
-            string sourceFile = Directory.GetFiles(path)?.FirstOrDefault(file => IsImageFile(file));
-            if (sourceFile != null)
+
+            var thumbnailPath = $@"{path}\folder.jpg";
+            var sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
+
+            if (sourcePath != null && !(File.Exists(thumbnailPath) && !this.checkBox_IsOverwrite.Checked))
             {
                 ++sumWorkNum;
             }
@@ -148,8 +151,7 @@ namespace FolderThumbnailGenerator
         {
             var thumbnailPath = $@"{path}\folder.jpg";
             var isThumbnailExist = File.Exists(thumbnailPath);
-            string sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
-
+            var sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
 
             // 拡張子一覧に合うファイルが存在しない、または、ファイルが既に存在し、上書きが許可されていない場合は作業しない
             if (sourcePath != null && !(isThumbnailExist && !this.checkBox_IsOverwrite.Checked))
@@ -234,11 +236,11 @@ namespace FolderThumbnailGenerator
         bool p_working;
         bool Working
         {
-            //get { return p_working; }
             set
             {
                 p_working = value;
                 this.button_Execution.Enabled = !value;
+                this.label_progress.Visible = value;
             }
         }
 
@@ -296,6 +298,7 @@ namespace FolderThumbnailGenerator
         void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             this.progressBar.Value = e.ProgressPercentage;
+            this.label_progress.Text = $@"{this.progressBar.Value} / {this.progressBar.Maximum}";
         }
 
         void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
