@@ -37,6 +37,7 @@
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.button_Execution = new System.Windows.Forms.Button();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
+            this.checkBox_IsImageCompress = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // button_DirectorySelect
@@ -103,14 +104,14 @@
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(39, 210);
+            this.progressBar.Location = new System.Drawing.Point(44, 217);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(348, 23);
             this.progressBar.TabIndex = 6;
             // 
             // button_Execution
             // 
-            this.button_Execution.Location = new System.Drawing.Point(167, 169);
+            this.button_Execution.Location = new System.Drawing.Point(177, 188);
             this.button_Execution.Name = "button_Execution";
             this.button_Execution.Size = new System.Drawing.Size(75, 23);
             this.button_Execution.TabIndex = 7;
@@ -125,12 +126,25 @@
             this.backgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
             this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
             // 
+            // checkBox_IsImageCompress
+            // 
+            this.checkBox_IsImageCompress.AutoSize = true;
+            this.checkBox_IsImageCompress.Checked = true;
+            this.checkBox_IsImageCompress.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox_IsImageCompress.Location = new System.Drawing.Point(64, 152);
+            this.checkBox_IsImageCompress.Name = "checkBox_IsImageCompress";
+            this.checkBox_IsImageCompress.Size = new System.Drawing.Size(100, 16);
+            this.checkBox_IsImageCompress.TabIndex = 8;
+            this.checkBox_IsImageCompress.Text = "画像を圧縮する";
+            this.checkBox_IsImageCompress.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(434, 261);
+            this.Controls.Add(this.checkBox_IsImageCompress);
             this.Controls.Add(this.button_Execution);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.checkBox_IsHiddenFile);
@@ -159,6 +173,7 @@
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Button button_Execution;
         private System.ComponentModel.BackgroundWorker backgroundWorker;
+        private System.Windows.Forms.CheckBox checkBox_IsImageCompress;
     }
 }
 
