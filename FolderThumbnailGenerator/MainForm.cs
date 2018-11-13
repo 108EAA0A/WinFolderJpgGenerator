@@ -130,16 +130,23 @@ namespace FolderThumbnailGenerator
                 // 圧縮判定
                 if (this.checkBox_IsImageCompress.Checked)
                 {
-                    ImageCodecInfo jpegEncoder = ImageCodecInfo.GetImageEncoders()
-                        .First(ici => ici.FormatID == ImageFormat.Jpeg.Guid);
-                    EncoderParameters encParams = new EncoderParameters(1);
-                    encParams.Param[0] = new EncoderParameter(Encoder.Quality, compressQuality);
-
-                    using (var src = new Bitmap(sourcePath))
+                    if (string.Compare(Path.GetExtension(sourcePath), "CR2", true) == 0)
                     {
-                        using (var dest = new Bitmap(src, getResizeSize(src.Size)))
+                        CR2ToJPG.CR2Converter.ConvertImage(sourcePath, thumbnailPath, compressQuality);
+                    }
+                    else
+                    {
+                        ImageCodecInfo jpegEncoder = ImageCodecInfo.GetImageEncoders()
+                            .First(ici => ici.FormatID == ImageFormat.Jpeg.Guid);
+                        EncoderParameters encParams = new EncoderParameters(1);
+                        encParams.Param[0] = new EncoderParameter(Encoder.Quality, compressQuality);
+
+                        using (var src = new Bitmap(sourcePath))
                         {
-                            dest.Save(thumbnailPath, jpegEncoder, encParams);
+                            using (var dest = new Bitmap(src, getResizeSize(src.Size)))
+                            {
+                                dest.Save(thumbnailPath, jpegEncoder, encParams);
+                            }
                         }
                     }
                 }
