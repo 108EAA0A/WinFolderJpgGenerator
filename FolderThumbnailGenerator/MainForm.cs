@@ -171,8 +171,7 @@ namespace FolderThumbnailGenerator
                 }
 
                 // 作業進捗率用
-                var percent = ((double)++completeWorkNum / totalWorkNum) * 100;
-                this.backgroundWorker.ReportProgress((int)percent);
+                this.backgroundWorker.ReportProgress(++completeWorkNum);
             }
 
             // 再帰処理許可判定
@@ -221,6 +220,7 @@ namespace FolderThumbnailGenerator
             if (!this.backgroundWorker.IsBusy)
             {
                 Working = true;
+                this.progressBar.Maximum = GetTotalAmountOfWork(this.textBox_DirectoryName.Text);
                 this.backgroundWorker.RunWorkerAsync();
             }
             else
@@ -230,21 +230,19 @@ namespace FolderThumbnailGenerator
         }
 
         int completeWorkNum = 0;
-        int totalWorkNum = 0;
 
         void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             // TODO:プログレスバーのために、総作業量と進捗率を取得する
 
             completeWorkNum = 0;
-            totalWorkNum = GetTotalAmountOfWork(this.textBox_DirectoryName.Text);
 
             this.backgroundWorker.ReportProgress(0);
-            if (totalWorkNum > 0)
+            if (this.progressBar.Maximum > 0)
             {
                 GenerateThumbnail(this.textBox_DirectoryName.Text);
             }
-            this.backgroundWorker.ReportProgress(100);
+            this.backgroundWorker.ReportProgress(this.progressBar.Maximum);
         }
 
         void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
