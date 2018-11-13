@@ -83,8 +83,8 @@ namespace FolderThumbnailGenerator
             return sumWorkNum;
         }
 
-        Size getResizeSize(Size size) => getResizeSize(size.Width, size.Height);
-        Size getResizeSize(int width, int height)
+        public static Size getResizeSize(Size size) => getResizeSize(size.Width, size.Height);
+        public static Size getResizeSize(int width, int height)
         {
             //if (src.Width <= thumbnailSize && src.Height <= thumbnailSize) ;
 
@@ -130,9 +130,9 @@ namespace FolderThumbnailGenerator
                 // 圧縮判定
                 if (this.checkBox_IsImageCompress.Checked)
                 {
-                    if (string.Compare(Path.GetExtension(sourcePath), "CR2", true) == 0)
+                    if (string.Compare(Path.GetExtension(sourcePath), ".CR2", true) == 0)
                     {
-                        CR2ToJPG.CR2Converter.ConvertImage(sourcePath, thumbnailPath, compressQuality);
+                        CR2ToJPG.CR2Converter.ConvertImage(sourcePath, thumbnailPath, compressQuality, true);
                     }
                     else
                     {

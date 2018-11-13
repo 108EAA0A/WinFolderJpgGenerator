@@ -57,6 +57,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CR2ToJPG\CR2Converter.cs" />
+    <Compile Include="CR2ToJPG\PartialStream.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

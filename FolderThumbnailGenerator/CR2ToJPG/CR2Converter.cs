@@ -18,7 +18,7 @@ namespace CR2ToJPG
         private static int _bufferSize = 512 * 1024;
         private static ImageCodecInfo _jpgImageCodec = GetJpegCodec();
 
-        public static void ConvertImage(string fileName, string outputName, long quality = 100L)
+        public static void ConvertImage(string fileName, string outputName, long quality = 100L, bool resize = false)
         {
             using (FileStream fi = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, _bufferSize, FileOptions.None))
             {
@@ -52,9 +52,21 @@ namespace CR2ToJPG
                     // Image Skipped
                 }
 
-                var ep = new EncoderParameters(1);
-                ep.Param[0] = new EncoderParameter(Encoder.Quality, quality);
-                bitmap.Save(outputName, _jpgImageCodec, ep);
+                if (!resize)
+                {
+                    var ep = new EncoderParameters(1);
+                    ep.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+                    bitmap.Save(outputName, _jpgImageCodec, ep);
+                }
+                else
+                {
+                    using (var dest = new Bitmap(bitmap, FolderThumbnailGenerator.MainForm.getResizeSize(bitmap.Size)))
+                    {
+                        var ep = new EncoderParameters(1);
+                        ep.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+                        dest.Save(outputName, _jpgImageCodec, ep);
+                    }
+                }
             }
         }
 
