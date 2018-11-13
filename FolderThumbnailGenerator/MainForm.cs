@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -38,6 +40,44 @@ namespace FolderThumbnailGenerator
         public MainForm()
         {
             InitializeComponent();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            AssemblyName asmName = Assembly.GetExecutingAssembly().GetName();
+            this.Text = asmName.Name + "        Version " + asmName.Version.ToString();
+
+            // app.configの読み込み
+            LoadSettings();
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            //アプリケーションの設定を保存する
+            SaveSettings();
+        }
+
+        void LoadSettings()
+        {
+            this.checkBox_IsOverwrite.Checked = AppSettings.Get<bool>("isOverwrite");
+            this.checkBox_IsRecursion.Checked = AppSettings.Get<bool>("isRecursion");
+            this.checkBox_IsHiddenFile.Checked = AppSettings.Get<bool>("isHiddenFile");
+            this.checkBox_IsImageCompress.Checked = AppSettings.Get<bool>("isImageCompress");
+        }
+
+        void SaveSettings()
+        {
+            //Configurationの作成
+            //ConfigurationUserLevel.Noneでアプリケーション構成ファイルを開く
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var settings = config.AppSettings.Settings;
+            settings["isOverwrite"].Value = this.checkBox_IsOverwrite.Checked.ToString();
+            settings["isRecursion"].Value = this.checkBox_IsRecursion.Checked.ToString();
+            settings["isHiddenFile"].Value = this.checkBox_IsHiddenFile.Checked.ToString();
+            settings["isImageCompress"].Value = this.checkBox_IsImageCompress.Checked.ToString();
+
+            //保存する
+            config.Save(ConfigurationSaveMode.Full);
         }
 
         bool IsImageFile(string path)
