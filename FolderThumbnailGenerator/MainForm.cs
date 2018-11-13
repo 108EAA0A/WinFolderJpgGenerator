@@ -53,17 +53,42 @@ namespace FolderThumbnailGenerator
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            //アプリケーションの設定を保存する
-            SaveSettings();
+            if (!isLoadSettingsFailed)
+            {
+                //アプリケーションの設定を保存する
+                SaveSettings();
+            }
         }
 
         void LoadSettings()
         {
-            this.checkBox_IsOverwrite.Checked = AppSettings.Get<bool>("isOverwrite");
-            this.checkBox_IsRecursion.Checked = AppSettings.Get<bool>("isRecursion");
-            this.checkBox_IsHiddenFile.Checked = AppSettings.Get<bool>("isHiddenFile");
-            this.checkBox_IsImageCompress.Checked = AppSettings.Get<bool>("isImageCompress");
+            //var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            //var settings = config.AppSettings.Settings;
+            //this.checkBox_IsOverwrite.Checked = bool.Parse(settings["isOverwrite"].Value);
+            //this.checkBox_IsRecursion.Checked = bool.Parse(settings["isRecursion"].Value);
+            //this.checkBox_IsHiddenFile.Checked = bool.Parse(settings["isHiddenFile"].Value);
+            //this.checkBox_IsImageCompress.Checked = bool.Parse(settings["isImageCompress"].Value);
+
+            try
+            {
+                this.checkBox_IsOverwrite.Checked = AppSettings.Get<bool>("isOverwrite");
+                this.checkBox_IsRecursion.Checked = AppSettings.Get<bool>("isRecursion");
+                this.checkBox_IsHiddenFile.Checked = AppSettings.Get<bool>("isHiddenFile");
+                this.checkBox_IsImageCompress.Checked = AppSettings.Get<bool>("isImageCompress");
+            }
+            catch (AppSettingNotFoundException e)
+            {
+                MessageBox.Show(
+                    $"{Application.ExecutablePath + ".Config"}が見つかりませんでした" + Environment.NewLine + e.Message,
+                    e.GetType().Name,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                isLoadSettingsFailed = true;
+            }
         }
+
+        bool isLoadSettingsFailed = false;
 
         void SaveSettings()
         {
