@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-//using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -33,6 +32,7 @@ namespace FolderThumbnailGenerator
             "gif",
             "bmp",
             "tiff",
+            "cr2",
         };
 
         public MainForm()
@@ -46,7 +46,8 @@ namespace FolderThumbnailGenerator
             if (string.IsNullOrWhiteSpace(fileExt)) return false; // 拡張子のないファイルは除外
             fileExt = fileExt.Remove(0, 1); // 先頭のピリオドを削除
 
-            return permissionImageExtList.Any(testExt => testExt == fileExt); // permissionImageExtListに存在するか
+            // permissionImageExtListに存在するかを大文字小文字を区別しないで比較する
+            return permissionImageExtList.Any(testExt => string.Compare(testExt, fileExt, true) == 0);
         }
 
         void AddAttributes(string path, FileAttributes attr)
