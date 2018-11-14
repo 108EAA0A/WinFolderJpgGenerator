@@ -42,7 +42,7 @@ namespace FolderThumbnailGenerator
             InitializeComponent();
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        void MainForm_Load(object sender, EventArgs e)
         {
             AssemblyName asmName = Assembly.GetExecutingAssembly().GetName();
             this.Text = asmName.Name + "        Version " + asmName.Version.ToString();
@@ -51,7 +51,7 @@ namespace FolderThumbnailGenerator
             LoadSettings();
         }
 
-        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (!isLoadSettingsFailed)
             {
@@ -79,7 +79,7 @@ namespace FolderThumbnailGenerator
             catch (AppSettingNotFoundException e)
             {
                 MessageBox.Show(
-                    $"{Application.ExecutablePath + ".Config"}が見つかりませんでした" + Environment.NewLine + e.Message,
+                    $"{Application.ExecutablePath}.Configが見つかりませんでした" + Environment.NewLine + e.Message,
                     e.GetType().Name,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning
@@ -151,8 +151,8 @@ namespace FolderThumbnailGenerator
             return sumWorkNum;
         }
 
-        public static Size getResizeSize(Size size) => getResizeSize(size.Width, size.Height);
-        public static Size getResizeSize(int width, int height)
+        public static Size GetResizeSize(Size size) => GetResizeSize(size.Width, size.Height);
+        public static Size GetResizeSize(int width, int height)
         {
             //if (src.Width <= thumbnailSize && src.Height <= thumbnailSize) ;
 
@@ -210,7 +210,7 @@ namespace FolderThumbnailGenerator
 
                         using (var src = new Bitmap(sourcePath))
                         {
-                            using (var dest = new Bitmap(src, getResizeSize(src.Size)))
+                            using (var dest = new Bitmap(src, GetResizeSize(src.Size)))
                             {
                                 dest.Save(thumbnailPath, jpegEncoder, encParams);
                             }
@@ -238,7 +238,7 @@ namespace FolderThumbnailGenerator
                 {
                     // NormalはCopyでUnauthorizedAccessExceptionが出る対策になるらしい
                     // ファイルの属性がないのはよくないため？
-                    AddAttributes(thumbnailPath, this.checkBox_IsHiddenFile.Checked ? FileAttributes.Hidden : FileAttributes.Normal);
+                    AddAttributes(thumbnailPath, this.checkBox_IsHiddenFile.Checked ? FileAttributes.Hidden & FileAttributes.System : FileAttributes.Normal);
                 }
                 else if(this.checkBox_IsHiddenFile.Checked)
                 {

@@ -60,7 +60,7 @@ namespace CR2ToJPG
                 }
                 else
                 {
-                    using (var dest = new Bitmap(bitmap, FolderThumbnailGenerator.MainForm.getResizeSize(bitmap.Size)))
+                    using (var dest = new Bitmap(bitmap, FolderThumbnailGenerator.MainForm.GetResizeSize(bitmap.Size)))
                     {
                         var ep = new EncoderParameters(1);
                         ep.Param[0] = new EncoderParameter(Encoder.Quality, quality);
