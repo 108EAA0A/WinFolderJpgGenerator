@@ -37,6 +37,20 @@ namespace FolderThumbnailGenerator
             "cr2",
         };
 
+        readonly string defaultAppConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <startup>
+    <supportedRuntime version=""v4.0"" sku="".NETFramework,Version=v4.7.2"" />
+  </startup>
+  <appSettings>
+    <add key=""isOverwrite"" value=""True"" />
+    <add key=""isRecursion"" value=""True"" />
+    <add key=""isHiddenFile"" value=""True"" />
+    <add key=""isImageCompress"" value=""True"" />
+  </appSettings>
+</configuration>
+";
+
         public MainForm()
         {
             InitializeComponent();
@@ -53,11 +67,8 @@ namespace FolderThumbnailGenerator
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (!isLoadSettingsFailed)
-            {
-                //アプリケーションの設定を保存する
-                SaveSettings();
-            }
+            //アプリケーションの設定を保存する
+            SaveSettings();
         }
 
         void LoadSettings()
@@ -78,17 +89,10 @@ namespace FolderThumbnailGenerator
             }
             catch (AppSettingNotFoundException e)
             {
-                MessageBox.Show(
-                    $"{Application.ExecutablePath}.Configが見つかりませんでした" + Environment.NewLine + e.Message,
-                    e.GetType().Name,
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                );
-                isLoadSettingsFailed = true;
+                // app.config無かったら生成
+                File.WriteAllText($@"{Application.ExecutablePath}.Config", defaultAppConfig);
             }
         }
-
-        bool isLoadSettingsFailed = false;
 
         void SaveSettings()
         {
