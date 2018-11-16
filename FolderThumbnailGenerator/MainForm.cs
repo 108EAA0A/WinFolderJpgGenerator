@@ -19,6 +19,23 @@ namespace FolderThumbnailGenerator
 {
     public partial class MainForm : Form
     {
+        #region field
+        // 作業の進捗カウンタ
+        int completeWorkNum = 0;
+
+        bool p_working;
+
+        // 作業開始前後に代入し、フォームのレイアウトを制御
+        bool Working
+        {
+            set
+            {
+                p_working = value;
+                this.button_Execution.Enabled = !value;
+                this.label_progress.Visible = value;
+            }
+        }
+
         // 圧縮時の圧縮率(default:75)
         const long compressQuality = 75L;
 
@@ -37,6 +54,7 @@ namespace FolderThumbnailGenerator
             "cr2",
         };
 
+        // app.configが無かったらこれを書き込む
         readonly string defaultAppConfig =
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
@@ -51,12 +69,14 @@ namespace FolderThumbnailGenerator
   </appSettings>
 </configuration>
 ";
+        #endregion
 
         public MainForm()
         {
             InitializeComponent();
         }
 
+        #region MainForm_Event
         void MainForm_Load(object sender, EventArgs e)
         {
             AssemblyName asmName = Assembly.GetExecutingAssembly().GetName();
@@ -72,15 +92,30 @@ namespace FolderThumbnailGenerator
             SaveSettings();
         }
 
+        void MainForm_DragEnter(object sender, DragEventArgs e)
+        {
+            // ドラッグドロップ時にカーソルの形状を変更
+            e.Effect = DragDropEffects.All;
+        }
+
+        void MainForm_DragDrop(object sender, DragEventArgs e)
+        {
+            // ファイルが渡されていなければ何もしない
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+
+            // 渡されたファイルに対して処理を行う
+            string dropPath = ((string[])e.Data.GetData(DataFormats.FileDrop))[0];
+
+            // ディレクトリならテキストボックスに代入
+            if (File.GetAttributes(dropPath).HasFlag(FileAttributes.Directory))
+            {
+                this.textBox_DirectoryName.Text = dropPath;
+            }
+        }
+        #endregion
+
         void LoadSettings()
         {
-            //var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            //var settings = config.AppSettings.Settings;
-            //this.checkBox_IsOverwrite.Checked = bool.Parse(settings["isOverwrite"].Value);
-            //this.checkBox_IsRecursion.Checked = bool.Parse(settings["isRecursion"].Value);
-            //this.checkBox_IsHiddenFile.Checked = bool.Parse(settings["isHiddenFile"].Value);
-            //this.checkBox_IsImageCompress.Checked = bool.Parse(settings["isImageCompress"].Value);
-
             try
             {
                 this.checkBox_IsOverwrite.Checked = AppSettings.Get<bool>("isOverwrite");
@@ -134,28 +169,6 @@ namespace FolderThumbnailGenerator
             File.SetAttributes(path, fa & ~attr);
         }
 
-        int GetTotalAmountOfWork(string path)
-        {
-            int sumWorkNum = 0;
-
-            var thumbnailPath = $@"{path}\folder.jpg";
-            var sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
-
-            if (sourcePath != null && !(File.Exists(thumbnailPath) && !this.checkBox_IsOverwrite.Checked))
-            {
-                ++sumWorkNum;
-            }
-
-            if (!this.checkBox_IsRecursion.Checked) return sumWorkNum;
-
-            foreach (string subDirPath in Directory.GetDirectories(path))
-            {
-                sumWorkNum += GetTotalAmountOfWork(subDirPath);
-            }
-
-            return sumWorkNum;
-        }
-
         public static Size GetResizeSize(Size size) => GetResizeSize(size.Width, size.Height);
         public static Size GetResizeSize(int width, int height)
         {
@@ -168,7 +181,7 @@ namespace FolderThumbnailGenerator
 
             if (!(width <= thumbnailNormalSidesSize && height <= thumbnailNormalSidesSize))
             {
-                double ratio = (thumbnailNormalSidesSize / (double) (width >= height ? width : height));
+                double ratio = (thumbnailNormalSidesSize / (double)(width >= height ? width : height));
                 x = (int)(width * ratio);
                 y = (int)(height * ratio);
             }
@@ -176,112 +189,109 @@ namespace FolderThumbnailGenerator
             return new Size(x, y);
         }
 
-
-        void GenerateThumbnail(string path)
+        int GetTotalAmountOfWork(string dirPath)
         {
-            var thumbnailPath = $@"{path}\folder.jpg";
+            int sumWorkNum = 0;
+
+            var thumbnailPath = $@"{dirPath}\folder.jpg";
+            var sourcePath = Directory.GetFiles(dirPath)
+                ?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
+
+            if (sourcePath != null && !(File.Exists(thumbnailPath) && !this.checkBox_IsOverwrite.Checked))
+            {
+                ++sumWorkNum;
+            }
+
+            if (!this.checkBox_IsRecursion.Checked) return sumWorkNum;
+
+            foreach (string subDirPath in Directory.GetDirectories(dirPath))
+            {
+                sumWorkNum += GetTotalAmountOfWork(subDirPath);
+            }
+
+            return sumWorkNum;
+        }
+
+        void GenerateThumbnail(string dirPath)
+        {
+            // 再帰処理許可判定
+            if (this.checkBox_IsRecursion.Checked)
+            {
+                foreach (string subDirPath in Directory.GetDirectories(dirPath))
+                {
+                    GenerateThumbnail(subDirPath);
+                }
+            }
+
+
+            var thumbnailPath = $@"{dirPath}\folder.jpg";
             var isThumbnailExist = File.Exists(thumbnailPath);
-            var sourcePath = Directory.GetFiles(path)?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
+            var sourcePath = Directory.GetFiles(dirPath)
+                ?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
+
 
             // 拡張子一覧に合うファイルが存在しない、または、ファイルが既に存在し、上書きが許可されていない場合は作業しない
-            if (sourcePath != null && !(isThumbnailExist && !this.checkBox_IsOverwrite.Checked))
+            if (sourcePath == null) return;
+            if (isThumbnailExist && !this.checkBox_IsOverwrite.Checked) return;
+
+
+            // ディレクトリの読み取り専用解除
+            RemoveAttributes(dirPath, FileAttributes.ReadOnly);
+
+            // ファイルが既に存在し、上書きが許可されている場合
+            if (isThumbnailExist && this.checkBox_IsOverwrite.Checked)
             {
-                // ディレクトリの読み取り専用解除
-                RemoveAttributes(path, FileAttributes.ReadOnly);
+                // 既存ファイルを消去
+                File.Delete(thumbnailPath);
+            }
 
-                // ファイルが既に存在し、上書きが許可されている場合
-                if (isThumbnailExist && this.checkBox_IsOverwrite.Checked)
+            // 圧縮判定
+            if (this.checkBox_IsImageCompress.Checked)
+            {
+                if (string.Compare(Path.GetExtension(sourcePath), ".CR2", true) == 0)
                 {
-                    // 既存ファイルの読み取り専用解除
-                    //RemoveAttributes(thumbnailPath, FileAttributes.ReadOnly);
-
-                    // 既存ファイルを消去
-                    File.Delete(thumbnailPath);
-                }
-
-                // 圧縮判定
-                if (this.checkBox_IsImageCompress.Checked)
-                {
-                    if (string.Compare(Path.GetExtension(sourcePath), ".CR2", true) == 0)
-                    {
-                        CR2ToJPG.CR2Converter.ConvertImage(sourcePath, thumbnailPath, compressQuality, true);
-                    }
-                    else
-                    {
-                        ImageCodecInfo jpegEncoder = ImageCodecInfo.GetImageEncoders()
-                            .First(ici => ici.FormatID == ImageFormat.Jpeg.Guid);
-                        EncoderParameters encParams = new EncoderParameters(1);
-                        encParams.Param[0] = new EncoderParameter(Encoder.Quality, compressQuality);
-
-                        using (var src = new Bitmap(sourcePath))
-                        {
-                            using (var dest = new Bitmap(src, GetResizeSize(src.Size)))
-                            {
-                                dest.Save(thumbnailPath, jpegEncoder, encParams);
-                            }
-                        }
-                    }
+                    CR2ToJPG.CR2Converter.ConvertImage(sourcePath, thumbnailPath, compressQuality, true);
                 }
                 else
                 {
-                    try
+                    ImageCodecInfo jpegEncoder = ImageCodecInfo.GetImageEncoders()
+                        .First(ici => ici.FormatID == ImageFormat.Jpeg.Guid);
+                    EncoderParameters encParams = new EncoderParameters(1);
+                    encParams.Param[0] = new EncoderParameter(Encoder.Quality, compressQuality);
+
+                    using (var src = new Bitmap(sourcePath))
                     {
-                        File.Copy(sourcePath, thumbnailPath, this.checkBox_IsOverwrite.Checked); // 上書き許可判定
-                    }
-                    //catch (UnauthorizedAccessException e)
-                    //{
-                    //    MessageBox.Show(e.Message, "UnauthorizedAccessException", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    //}
-                    catch (Exception e)
-                    {
-                        //とりあえず黙らせる
+                        using (var dest = new Bitmap(src, GetResizeSize(src.Size)))
+                        {
+                            dest.Save(thumbnailPath, jpegEncoder, encParams);
+                        }
                     }
                 }
-
-                // 隠しファイル化判定
-                if (!isThumbnailExist)
-                {
-                    // NormalはCopyでUnauthorizedAccessExceptionが出る対策になるらしい
-                    // ファイルの属性がないのはよくないため？
-                    AddAttributes(thumbnailPath, this.checkBox_IsHiddenFile.Checked ? FileAttributes.Hidden | FileAttributes.System : FileAttributes.Normal);
-                }
-                else if(this.checkBox_IsHiddenFile.Checked)
-                {
-                    AddAttributes(thumbnailPath, FileAttributes.Hidden);
-                }
-
-                // 作業進捗率用
-                this.backgroundWorker.ReportProgress(++completeWorkNum);
             }
-
-            // 再帰処理許可判定
-            if (!this.checkBox_IsRecursion.Checked) return;
-
-            foreach (string subDirPath in Directory.GetDirectories(path))
+            else
             {
-                GenerateThumbnail(subDirPath);
+                File.Copy(sourcePath, thumbnailPath, this.checkBox_IsOverwrite.Checked);
             }
-        }
 
-        bool p_working;
-        bool Working
-        {
-            set
-            {
-                p_working = value;
-                this.button_Execution.Enabled = !value;
-                this.label_progress.Visible = value;
-            }
+            // 隠しファイル化判定
+            // NormalはCopyでUnauthorizedAccessExceptionが出る対策になるらしい
+            // ファイルの属性がないのはよくないため？
+            AddAttributes(thumbnailPath,
+                this.checkBox_IsHiddenFile.Checked
+                    ? FileAttributes.Hidden | FileAttributes.System
+                    : FileAttributes.Normal);
+
+            // 作業進捗率を更新
+            this.backgroundWorker.ReportProgress(++completeWorkNum);
         }
 
         void button_DirectorySelect_Click(object sender, EventArgs e)
         {
             using (var cofd = new CommonOpenFileDialog())
             {
-                if (this.textBox_DirectoryName.Text != null) cofd.DefaultFileName = this.textBox_DirectoryName.Text;
                 cofd.IsFolderPicker = true;
-                CommonFileDialogResult result = cofd.ShowDialog();
-                if (result == CommonFileDialogResult.Ok && !string.IsNullOrWhiteSpace(cofd.FileName))
+                if (this.textBox_DirectoryName.Text != null) cofd.DefaultFileName = this.textBox_DirectoryName.Text;
+                if (cofd.ShowDialog() == CommonFileDialogResult.Ok && !string.IsNullOrWhiteSpace(cofd.FileName))
                 {
                     this.textBox_DirectoryName.Text = cofd.FileName;
                 }
@@ -305,22 +315,30 @@ namespace FolderThumbnailGenerator
             }
             else
             {
+                // ボタンを押せなくしてるので来ないはずだが一応
                 MessageBox.Show(@"作業中です");
             }
         }
 
-        int completeWorkNum = 0;
-
-        void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        #region backgroundWorker
+        void backgroundWorker_DoWork(object sender, DoWorkEventArgs ev)
         {
-            // TODO:プログレスバーのために、総作業量と進捗率を取得する
-
             completeWorkNum = 0;
 
             this.backgroundWorker.ReportProgress(0);
             if (this.progressBar.Maximum > 0)
             {
-                GenerateThumbnail(this.textBox_DirectoryName.Text);
+                try
+                {
+                    GenerateThumbnail(this.textBox_DirectoryName.Text);
+                }
+                catch (Exception ex)
+                {
+                    //ex.Message;
+                    ev.Cancel = true;
+                    this.backgroundWorker.ReportProgress(this.progressBar.Maximum);
+                    return;
+                }
             }
             this.backgroundWorker.ReportProgress(this.progressBar.Maximum);
         }
@@ -334,28 +352,15 @@ namespace FolderThumbnailGenerator
         void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Working = false;
-            MessageBox.Show(@"終了しました");
-        }
-
-        void MainForm_DragEnter(object sender, DragEventArgs e)
-        {
-            // ドラッグドロップ時にカーソルの形状を変更
-            e.Effect = DragDropEffects.All;
-        }
-
-        void MainForm_DragDrop(object sender, DragEventArgs e)
-        {
-            // ファイルが渡されていなければ何もしない
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-
-            // 渡されたファイルに対して処理を行う
-            string dropPath = ((string[]) e.Data.GetData(DataFormats.FileDrop))[0];
-
-            // ディレクトリならテキストボックスに代入
-            if (File.GetAttributes(dropPath).HasFlag(FileAttributes.Directory))
+            if (e.Cancelled)
             {
-                this.textBox_DirectoryName.Text = dropPath;
+                MessageBox.Show(@"エラーが発生したため、処理を中断しました");
+            }
+            else
+            {
+                MessageBox.Show(@"終了しました");
             }
         }
+        #endregion
     }
 }
