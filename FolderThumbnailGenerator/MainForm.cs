@@ -230,8 +230,9 @@ namespace FolderThumbnailGenerator
                 ?.FirstOrDefault(file => file != thumbnailPath && IsImageFile(file));
 
 
-            // 拡張子一覧に合うファイルが存在しない、または、ファイルが既に存在し、上書きが許可されていない場合は作業しない
+            // 拡張子一覧に合うファイルが存在しない
             if (sourcePath == null) return;
+            // ファイルが既に存在し、上書きが許可されていない
             if (isThumbnailExist && !this.checkBox_IsOverwrite.Checked) return;
 
 
