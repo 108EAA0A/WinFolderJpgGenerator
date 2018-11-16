@@ -243,7 +243,7 @@ namespace FolderThumbnailGenerator
                 {
                     // NormalはCopyでUnauthorizedAccessExceptionが出る対策になるらしい
                     // ファイルの属性がないのはよくないため？
-                    AddAttributes(thumbnailPath, this.checkBox_IsHiddenFile.Checked ? FileAttributes.Hidden & FileAttributes.System : FileAttributes.Normal);
+                    AddAttributes(thumbnailPath, this.checkBox_IsHiddenFile.Checked ? FileAttributes.Hidden | FileAttributes.System : FileAttributes.Normal);
                 }
                 else if(this.checkBox_IsHiddenFile.Checked)
                 {
