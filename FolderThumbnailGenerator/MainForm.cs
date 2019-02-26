@@ -8,6 +8,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -22,6 +23,8 @@ namespace FolderThumbnailGenerator
         #region field
         // 作業の進捗カウンタ
         int completeWorkNum = 0;
+
+        SemaphoreSlim sems;
 
         bool p_working;
 
@@ -212,18 +215,33 @@ namespace FolderThumbnailGenerator
             return sumWorkNum;
         }
 
-        void GenerateThumbnail(string dirPath)
+        void CreateThumbnailRecursion(string dirPath)
         {
+            if (sems == null)
+            {
+                CreateThumbnail(dirPath);
+            }
+            else
+            {
+                sems.Wait();
+                Task.Run(() => {
+                    CreateThumbnail(dirPath);
+                    sems.Release();
+                });
+            }
+
             // 再帰処理許可判定
             if (this.checkBox_IsRecursion.Checked)
             {
                 foreach (string subDirPath in Directory.GetDirectories(dirPath))
                 {
-                    GenerateThumbnail(subDirPath);
+                    CreateThumbnailRecursion(subDirPath);
                 }
             }
+        }
 
-
+        void CreateThumbnail(string dirPath)
+        {
             var thumbnailPath = $@"{dirPath}\folder.jpg";
             var isThumbnailExist = File.Exists(thumbnailPath);
             var sourcePath = Directory.GetFiles(dirPath)
@@ -283,7 +301,7 @@ namespace FolderThumbnailGenerator
                     : FileAttributes.Normal);
 
             // 作業進捗率を更新
-            this.backgroundWorker.ReportProgress(++completeWorkNum);
+            this.backgroundWorker.ReportProgress(Interlocked.Increment(ref completeWorkNum));
         }
 
         void button_DirectorySelect_Click(object sender, EventArgs e)
@@ -324,23 +342,30 @@ namespace FolderThumbnailGenerator
         #region backgroundWorker
         void backgroundWorker_DoWork(object sender, DoWorkEventArgs ev)
         {
-            completeWorkNum = 0;
-
             this.backgroundWorker.ReportProgress(0);
-            if (this.progressBar.Maximum > 0)
+
+            using (sems = new SemaphoreSlim(Environment.ProcessorCount))
             {
-                try
+                completeWorkNum = 0;
+
+                if (this.progressBar.Maximum > 0)
                 {
-                    GenerateThumbnail(this.textBox_DirectoryName.Text);
+                    try
+                    {
+                        CreateThumbnailRecursion(this.textBox_DirectoryName.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        //ex.Message;
+                        ev.Cancel = true;
+                        this.backgroundWorker.ReportProgress(this.progressBar.Maximum);
+                        return;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    //ex.Message;
-                    ev.Cancel = true;
-                    this.backgroundWorker.ReportProgress(this.progressBar.Maximum);
-                    return;
-                }
+
+                while (completeWorkNum < this.progressBar.Maximum) Task.Delay(500).Wait();
             }
+
             this.backgroundWorker.ReportProgress(this.progressBar.Maximum);
         }
 
