@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Shell;
 
+#pragma warning disable CS0168
 
 namespace FolderThumbnailGenerator
 {

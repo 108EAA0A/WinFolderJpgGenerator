@@ -37,6 +37,8 @@ namespace CR2ToJPG
 
                 Bitmap bitmap = new Bitmap(new PartialStream(fi, jpgStartPosition, fileSize));
 
+
+#pragma warning disable CS0168
                 try
                 {
                     if (_jpgImageCodec != null && (orientation == 8 || orientation == 6))
@@ -51,6 +53,7 @@ namespace CR2ToJPG
                 {
                     // Image Skipped
                 }
+#pragma warning restore CS0168
 
                 if (!resize)
                 {
