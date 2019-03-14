@@ -44,7 +44,6 @@ namespace FolderThumbnailGenerator
         const long compressQuality = 75L;
 
         const int thumbnailNormalSidesSize = 200;
-        const int thumbnailLongSidesSize = 300;
 
         // folder.jpgの作成元にすることを許可する拡張子一覧
         readonly string[] permissionImageExtList =
