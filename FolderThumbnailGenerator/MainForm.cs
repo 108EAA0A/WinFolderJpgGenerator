@@ -179,17 +179,17 @@ namespace FolderThumbnailGenerator
 
             // とりあえず縮小のみ実装
 
-            int x = width;
-            int y = height;
+            var size = new Size(width, height);
 
-            if (!(width <= thumbnailNormalSidesSize && height <= thumbnailNormalSidesSize))
+            if (width > thumbnailNormalSidesSize || height > thumbnailNormalSidesSize)
             {
-                double ratio = (thumbnailNormalSidesSize / (double)(width >= height ? width : height));
-                x = (int)(width * ratio);
-                y = (int)(height * ratio);
+                // 小さい方がthumbnailNormalSidesSizeになるように合わせる
+                double ratio = (thumbnailNormalSidesSize / (double)(width < height ? width : height));
+                size.Width = (int)(width * ratio);
+                size.Height = (int)(height * ratio);
             }
 
-            return new Size(x, y);
+            return size;
         }
 
         int GetTotalAmountOfWork(string dirPath)
