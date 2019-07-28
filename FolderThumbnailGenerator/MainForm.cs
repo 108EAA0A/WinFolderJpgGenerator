@@ -27,6 +27,8 @@ namespace FolderThumbnailGenerator
 
         SemaphoreSlim sems;
 
+        decimal nowRecursionDepth = 0;
+
         bool p_working;
 
         // 作業開始前後に代入し、フォームのレイアウトを制御
@@ -203,6 +205,14 @@ namespace FolderThumbnailGenerator
             return size;
         }
 
+        bool CanRecursion(decimal depth)
+        {
+            return this.checkBox_IsRecursion.Checked && !(
+                this.numericUpDown_RecursionDepth.Value != -1 &&
+                this.numericUpDown_RecursionDepth.Value <= depth
+            );
+        }
+
         int GetTotalAmountOfWork(string dirPath)
         {
             int sumWorkNum = 0;
@@ -216,12 +226,14 @@ namespace FolderThumbnailGenerator
                 ++sumWorkNum;
             }
 
-            if (!this.checkBox_IsRecursion.Checked) return sumWorkNum;
+            if (!CanRecursion(nowRecursionDepth)) return sumWorkNum;
 
+            ++nowRecursionDepth;
             foreach (string subDirPath in Directory.GetDirectories(dirPath))
             {
                 sumWorkNum += GetTotalAmountOfWork(subDirPath);
             }
+            --nowRecursionDepth;
 
             return sumWorkNum;
         }
@@ -242,13 +254,14 @@ namespace FolderThumbnailGenerator
             }
 
             // 再帰処理許可判定
-            if (this.checkBox_IsRecursion.Checked)
+            if (!CanRecursion(nowRecursionDepth)) return;
+
+            ++nowRecursionDepth;
+            foreach (string subDirPath in Directory.GetDirectories(dirPath))
             {
-                foreach (string subDirPath in Directory.GetDirectories(dirPath))
-                {
-                    CreateThumbnailRecursion(subDirPath);
-                }
+                CreateThumbnailRecursion(subDirPath);
             }
+            --nowRecursionDepth;
         }
 
         void CreateThumbnail(string dirPath)
