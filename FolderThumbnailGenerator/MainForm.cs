@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -22,6 +23,7 @@ namespace FolderThumbnailGenerator
     public partial class MainForm : Form
     {
         #region field
+
         // 作業の進捗カウンタ
         int completeWorkNum = 0;
 
@@ -60,7 +62,7 @@ namespace FolderThumbnailGenerator
         };
 
         // app.configが無かったらこれを書き込む
-        readonly string defaultAppConfig =
+        const string defaultAppConfig =
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <startup>
@@ -75,6 +77,7 @@ namespace FolderThumbnailGenerator
   </appSettings>
 </configuration>
 ";
+
         #endregion
 
         public MainForm()
@@ -353,6 +356,7 @@ namespace FolderThumbnailGenerator
             if (!this.backgroundWorker.IsBusy)
             {
                 Working = true;
+                Debug.Assert(nowRecursionDepth == 0);
                 this.progressBar.Maximum = GetTotalAmountOfWork(this.textBox_DirectoryName.Text);
                 this.backgroundWorker.RunWorkerAsync();
             }
@@ -364,6 +368,7 @@ namespace FolderThumbnailGenerator
         }
 
         #region backgroundWorker
+
         void backgroundWorker_DoWork(object sender, DoWorkEventArgs ev)
         {
             this.backgroundWorker.ReportProgress(0);
@@ -376,6 +381,7 @@ namespace FolderThumbnailGenerator
                 {
                     try
                     {
+                        Debug.Assert(nowRecursionDepth == 0);
                         CreateThumbnailRecursion(this.textBox_DirectoryName.Text);
                     }
                     catch (Exception ex)
@@ -411,6 +417,7 @@ namespace FolderThumbnailGenerator
                 MessageBox.Show(@"終了しました");
             }
         }
+
         #endregion
 
         void checkBox_IsRecursion_CheckedChanged(object sender, EventArgs e) => RecursionDepthFormStateUpdate();
