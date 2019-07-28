@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.button_DirectorySelect = new System.Windows.Forms.Button();
             this.checkBox_IsRecursion = new System.Windows.Forms.CheckBox();
             this.textBox_DirectoryName = new System.Windows.Forms.TextBox();
@@ -39,6 +40,10 @@
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.checkBox_IsImageCompress = new System.Windows.Forms.CheckBox();
             this.label_progress = new System.Windows.Forms.Label();
+            this.label_RecursionDepth = new System.Windows.Forms.Label();
+            this.numericUpDown_RecursionDepth = new System.Windows.Forms.NumericUpDown();
+            this.toolTip_RecursionDepth = new System.Windows.Forms.ToolTip(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_RecursionDepth)).BeginInit();
             this.SuspendLayout();
             // 
             // button_DirectorySelect
@@ -58,10 +63,11 @@
             this.checkBox_IsRecursion.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBox_IsRecursion.Location = new System.Drawing.Point(68, 97);
             this.checkBox_IsRecursion.Name = "checkBox_IsRecursion";
-            this.checkBox_IsRecursion.Size = new System.Drawing.Size(199, 16);
+            this.checkBox_IsRecursion.Size = new System.Drawing.Size(168, 16);
             this.checkBox_IsRecursion.TabIndex = 1;
-            this.checkBox_IsRecursion.Text = "サブディレクトリまで再帰的に処理する";
+            this.checkBox_IsRecursion.Text = "サブディレクトリ以下も処理する";
             this.checkBox_IsRecursion.UseVisualStyleBackColor = true;
+            this.checkBox_IsRecursion.CheckedChanged += new System.EventHandler(this.checkBox_IsRecursion_CheckedChanged);
             // 
             // textBox_DirectoryName
             // 
@@ -153,12 +159,41 @@
             this.label_progress.UseMnemonic = false;
             this.label_progress.Visible = false;
             // 
+            // label_RecursionDepth
+            // 
+            this.label_RecursionDepth.AutoSize = true;
+            this.label_RecursionDepth.Location = new System.Drawing.Point(314, 98);
+            this.label_RecursionDepth.Name = "label_RecursionDepth";
+            this.label_RecursionDepth.Size = new System.Drawing.Size(25, 12);
+            this.label_RecursionDepth.TabIndex = 10;
+            this.label_RecursionDepth.Text = "深さ";
+            // 
+            // numericUpDown_RecursionDepth
+            // 
+            this.numericUpDown_RecursionDepth.Location = new System.Drawing.Point(345, 96);
+            this.numericUpDown_RecursionDepth.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown_RecursionDepth.Name = "numericUpDown_RecursionDepth";
+            this.numericUpDown_RecursionDepth.Size = new System.Drawing.Size(46, 19);
+            this.numericUpDown_RecursionDepth.TabIndex = 11;
+            this.numericUpDown_RecursionDepth.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDown_RecursionDepth.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(434, 261);
+            this.Controls.Add(this.numericUpDown_RecursionDepth);
+            this.Controls.Add(this.label_RecursionDepth);
             this.Controls.Add(this.label_progress);
             this.Controls.Add(this.checkBox_IsImageCompress);
             this.Controls.Add(this.button_Execution);
@@ -176,6 +211,7 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.MainForm_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.MainForm_DragEnter);
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_RecursionDepth)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -194,6 +230,9 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.Windows.Forms.CheckBox checkBox_IsImageCompress;
         private System.Windows.Forms.Label label_progress;
+        private System.Windows.Forms.Label label_RecursionDepth;
+        private System.Windows.Forms.NumericUpDown numericUpDown_RecursionDepth;
+        private System.Windows.Forms.ToolTip toolTip_RecursionDepth;
     }
 }
 

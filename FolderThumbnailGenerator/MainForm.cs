@@ -67,6 +67,7 @@ namespace FolderThumbnailGenerator
   <appSettings>
     <add key=""isOverwrite"" value=""True"" />
     <add key=""isRecursion"" value=""True"" />
+    <add key=""RecursionDepth"" value=""-1"" />
     <add key=""isHiddenFile"" value=""True"" />
     <add key=""isImageCompress"" value=""True"" />
   </appSettings>
@@ -87,6 +88,14 @@ namespace FolderThumbnailGenerator
 
             // app.configの読み込み
             LoadSettings();
+
+            // 再帰深度機能の初期化
+            const string caption = "-1にすると無制限になります";
+            this.toolTip_RecursionDepth.SetToolTip(this.label_RecursionDepth, caption);
+            this.toolTip_RecursionDepth.SetToolTip(this.numericUpDown_RecursionDepth, caption);
+            this.numericUpDown_RecursionDepth.Maximum = decimal.MaxValue;
+
+            RecursionDepthFormStateUpdate();
         }
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -123,6 +132,7 @@ namespace FolderThumbnailGenerator
             {
                 this.checkBox_IsOverwrite.Checked = AppSettings.Get<bool>("isOverwrite");
                 this.checkBox_IsRecursion.Checked = AppSettings.Get<bool>("isRecursion");
+                this.numericUpDown_RecursionDepth.Value = AppSettings.Get<decimal>("RecursionDepth");
                 this.checkBox_IsHiddenFile.Checked = AppSettings.Get<bool>("isHiddenFile");
                 this.checkBox_IsImageCompress.Checked = AppSettings.Get<bool>("isImageCompress");
             }
@@ -141,6 +151,7 @@ namespace FolderThumbnailGenerator
             var settings = config.AppSettings.Settings;
             settings["isOverwrite"].Value = this.checkBox_IsOverwrite.Checked.ToString();
             settings["isRecursion"].Value = this.checkBox_IsRecursion.Checked.ToString();
+            settings["RecursionDepth"].Value = this.numericUpDown_RecursionDepth.Value.ToString();
             settings["isHiddenFile"].Value = this.checkBox_IsHiddenFile.Checked.ToString();
             settings["isImageCompress"].Value = this.checkBox_IsImageCompress.Checked.ToString();
 
@@ -388,5 +399,14 @@ namespace FolderThumbnailGenerator
             }
         }
         #endregion
+
+        void checkBox_IsRecursion_CheckedChanged(object sender, EventArgs e) => RecursionDepthFormStateUpdate();
+
+        void RecursionDepthFormStateUpdate()
+        {
+            bool state = this.checkBox_IsRecursion.Checked;
+            this.label_RecursionDepth.Enabled = state;
+            this.numericUpDown_RecursionDepth.Enabled = state;
+        }
     }
 }
